@@ -1,0 +1,16 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+    <div id="index-container">
+        <h1> All Posts</h1>
+        <div class="posts" id="new-post">
+            <h3>New Post</h3>
+            <form id="new-post-form">
+                <textarea class="form-control" id="new-post-form" placeholder="New post"></textarea>
+                <input type="submit" class="btn btn-primary" id="new-post-submit" formmethod="post" value="Post"/>
+            </form>
+        </div>
+        <div class="posts" id="existing-posts">
+        </div>
+    </div>
+{% endblock %}

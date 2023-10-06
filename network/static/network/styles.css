@@ -1,0 +1,15 @@
+#index-container {
+    padding: 10px;
+    margin-bottom: 5px;
+}
+.posts {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+#new-post-form input[type="submit"] {
+    margin-top: 10px;
+}
+
