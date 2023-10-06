@@ -1,10 +1,13 @@
+import json
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.http import JsonResponse
+from django.shortcuts import HttpResponse, HttpResponseRedirect, render
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
 
-from .models import User
+from .models import User, Post, Follow, Like
 
 
 def index(request):
@@ -61,3 +64,11 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
+    
+def fetchPosts(request):
+    if request.method == "GET":
+        posts = Post.objects.all()
+        return JsonResponse([post.serialize() for post in posts], safe=False)
+    
+    else:
+        return JsonResponse({"error": "GET request required."}, status=400)    
