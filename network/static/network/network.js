@@ -33,7 +33,7 @@ function add_posts(posts) {
         const postDiv = document.createElement('div');
         postDiv.className = 'postDiv';
         postDiv.innerHTML = `
-            <div id="post-poster"><h3>${post.poster}</h3></div>
+            <div id="post-poster">${post.poster}</div>
             <div id="post-body">${post.body}</div>
             <div id="post-timestamp">${post.timestamp}</div>`;
 

@@ -1,12 +1,37 @@
 #index-container {
     padding: 10px;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
+    font: 15px sans-serif;
 }
+
 .posts {
     border: 1px solid #ccc;
     border-radius: 5px;
-    padding: 20px;
-    margin-bottom: 20px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.postDiv {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 15px;
+    margin-top: 15px;
+}
+
+.postDiv #post-poster,
+.postDiv #post-body,
+.postDiv #post-timestamp {
+    margin-bottom: 5px;
+}
+
+#post-poster {
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+#post-timestamp {
+    color: #777;
 }
 
 #new-post-form input[type="submit"] {
