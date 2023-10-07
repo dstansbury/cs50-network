@@ -1,9 +1,13 @@
+/* Stylesheet */
+
+/* Styles the main container of the index page */
 #index-container {
     padding: 10px;
     margin-bottom: 10px;
     font: 15px sans-serif;
 }
 
+/* Post divs on index page */
 .posts {
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -11,6 +15,12 @@
     margin-bottom: 15px;
 }
 
+/* Styles the form for creating a new post */
+#new-post-form input[type="submit"] {
+    margin-top: 10px;
+}
+
+/* .postDiv created by the network.js file */
 .postDiv {
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -34,7 +44,8 @@
     color: #777;
 }
 
-#new-post-form input[type="submit"] {
-    margin-top: 10px;
+/* Add Like Button */
+.add-like-button {
+    height: 15px;
+    width: 15px;
 }
-

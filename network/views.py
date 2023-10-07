@@ -24,6 +24,7 @@ def index(request):
     else:
         return render(request, "network/index.html")
 
+
 def login_view(request):
     if request.method == "POST":
 
