@@ -1,39 +1,49 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // logic for the new post form submission
-    document.querySelector("#new-post-form").addEventListener("submit", function(event))
-    });
+    document.querySelector("#new-post-form").addEventListener("submit", function(event) {
+        // Your form submission logic goes here
+        event.preventDefault();  // Prevent the default form submission behavior
 
-// gets all the posts from the DB
-function load_posts() {
-      
-    // get all the existing posts from the DB
-    fetch(`/posts`)
-    .then(response => response.json())
-    .then(posts => {
-          
-        // Print the posts to the console for debugging
-        console.log(posts);
-      
-        // loop through the posts and create a new div element for each post
-        posts.forEach(post => {
-            add_post(post);
+        // After posting, you may want to reload the posts
+        load_posts();
+    });    
+
+    // Load posts initially
+    load_posts();
+});
+
+// gets all the posts from the DB using an AJAX request
+function fetchPostsData() {
+    return fetch(`/`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(response => response.json())
+        .then(posts => {
+            console.log('Fetched posts data:', posts);
+            return posts;  // Return the posts data
+        })
+        .catch(error => {
+            console.error('Error fetching posts:', error);
+            throw error;  // Re-throw the error for proper error handling
         });
+};
+
+function add_posts(posts) {
+    const postsContainer = document.getElementById('existing-posts');
+    postsContainer.innerHTML = '';  // Clear existing content before appending new posts
+
+    posts.forEach(post => {
+        const postDiv = document.createElement('div');
+        postDiv.className = 'postDiv';
+        postDiv.innerHTML = `
+            <div id="post-poster"><h3>${post.poster}</h3></div>
+            <div id="post-body">${post.body}</div>
+            <div id="post-timestamp">${post.timestamp}</div>`;
+
+        postsContainer.appendChild(postDiv);
     });
-}
+};
 
-
-
-function add_post(post) {
-    // set up a new div for each new element
-    const postDiv = document.createElement('div');
-      
-    // give the new div a class name so we can style it in the CSS file
-    postDiv.className = 'postDiv';
-    // POSSIBLY NOT NECESSARY? postDiv.idName = 'postDiv';
-
-    postDiv.innerHTML = `
-        <div id="post-poster"><h3>${post.poster}</h3></div>
-        <div id="post-body">${post.body}</div>
-        <div id="post-timestamp">${post.timestamp}</div>`
-        ;})
+function load_posts() {
+    fetchPostsData()
+        .then(posts => {
+            add_posts(posts);
+        });
 };

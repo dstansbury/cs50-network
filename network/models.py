@@ -13,7 +13,7 @@ class Post(models.Model):
     def serialize(self):
         return {
             "id": self.id,
-            "poster": self.poster,
+            "poster": self.poster.username,
             "body": self.body,
             "timestamp": self.timestamp.strftime("%b %d %Y, %I:%M %p")
         }
@@ -24,8 +24,8 @@ class Follow(models.Model):
     
     def serialize(self):
         return {
-            "follower": self.follower,
-            "follows": self.follows 
+            "follower": self.follower.user,
+            "follows": self.follows.user 
         }
     
 class Like(models.Model):
@@ -34,6 +34,6 @@ class Like(models.Model):
     
     def serialize(self):
         return {
-            "liker": self.liker,
-            "post": self.post
+            "liker": self.liker.user,
+            "post": self.post.user
         }
