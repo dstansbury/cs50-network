@@ -9,20 +9,47 @@ from django.views.decorators.csrf import csrf_exempt
 
 from .models import User, Post, Follow, Like
 
-
 def index(request):
+    # Check if the user is logged in
+    if not request.user.is_authenticated:
+        return HttpResponseRedirect(reverse("login"))
+    
     #Check if it's an AJAX request, if so grab all the posts 
     #from the DB and return them as JSON
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         try:
-            posts = Post.objects.all()
-            print(f"successfully grabbed {len(posts)} posts from the DB")
-            return JsonResponse([post.serialize() for post in posts], safe=False)
+            # get the posts in reverse chronological order
+            posts = Post.objects.all().order_by('-timestamp')
+            serialized_posts = []
+            for post in posts:
+                serialized_post = post.serialize()
+                serialized_posts.append(serialized_post)
+            #serialized_posts.append(request.user.username)
+            return JsonResponse(serialized_posts, safe=False)
         except:
             return JsonResponse({"error": "GET request required."}, status=400)
-    #If it's not an AJAX request, redirect to the index page
+    #If it's not an AJAX request, render the index page
     else:
         return render(request, "network/index.html")
+
+
+#     
+def profile(request, username):
+    # Check if the user is logged in
+    if not request.user.is_authenticated:
+        return HttpResponseRedirect(reverse("login"))
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            numFollowers = Follow.objects.followers(username=username)
+            numFollows = Follow.objects.follows(username=username)
+            return JsonResponse([numFollowers, numFollows], safe=False)
+        except:
+            return JsonResponse({"error": "GET request required."}, status=400)
+    
+    #If it's not an AJAX request, redirect to the index page
+    else:
+        return HttpResponseRedirect(reverse("index"))
 
 
 def login_view(request):

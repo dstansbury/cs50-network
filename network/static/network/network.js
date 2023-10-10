@@ -13,6 +13,10 @@ document.addEventListener('DOMContentLoaded', function() {
     show_all_posts();
 });
 
+// ----------------------------------------------
+// FETCH FROM SERVER FUNCTIONS
+// ----------------------------------------------
+
 // gets all the posts from the DB using an AJAX request
 function fetchAllPostsData() {
     return fetch(`/`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
@@ -28,14 +32,34 @@ function fetchAllPostsData() {
 };
 
 // gets a particular user's profile information from the DB using an AJAX request
-function fetchUserProfileData() {
-    // to fill
+function fetchUserProfileData(userID) {
+    return fetch(`/user/${userID}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(response => response.json())
+    .then(profileData => {
+        console.log('Fetched profile date for userID:', userID, profileData);
+        return profileData;
+    })
+    .catch(error => {
+        console.error('Error fetching profile information:', error);
+        throw error;  // Re-throw the error for proper error handling
+    });
 };
+
+// ----------------------------------------------
+// POPULATE THE DOM FUNCTIONS
+// ----------------------------------------------
 
 // adds posts to the DOM
 function add_posts(posts) {
     const postsContainer = document.getElementById('all-existing-posts');
     postsContainer.innerHTML = '';  // Clear existing content before appending new posts
+
+    // Sort the posts by timestamp in descending order (newest first)
+    posts.sort((a, b) => {
+        const dateA = new Date(a.timestamp);
+        const dateB = new Date(b.timestamp);
+        return dateB - dateA;
+    });
 
     posts.forEach(post => {
         const singlePostContainer = document.createElement('div');
@@ -43,7 +67,6 @@ function add_posts(posts) {
         
         const postDiv = document.createElement('div');
         postDiv.className = 'postDiv';
-        console.log('Poster:', post.poster);
         postDiv.innerHTML = `
             <div id="post-poster">
                 <button type="button" class="btn btn-link" onclick="show_user_page('${post.poster}')">
@@ -54,35 +77,45 @@ function add_posts(posts) {
             <div id="post-timestamp">${post.timestamp}</div>
             <div id="post-likes" style="color: #d9534f">Num Likes</div>`;
         
-        // Create a like button
-        const likeButton = document.createElement('input');
-        likeButton.className = 'btn btn-outline-danger';
-        likeButton.type = 'submit';
-        likeButton.id = `like-submit-${post.id}`;
-        likeButton.formmethod = 'post';
-        likeButton.value = 'Like';
-
-        // Create an unlike button
-        const unlikeButton = document.createElement('input');
-        unlikeButton.className = 'btn btn-outline-secondary';
-        unlikeButton.type = 'submit';
-        unlikeButton.id = `unlike-submit-${post.id}`;
-        unlikeButton.formmethod = 'post';
-        unlikeButton.value = 'Unlike';
-
         // Add a container for each post
         postsContainer.appendChild(singlePostContainer);
 
         // add the post inside the Post Container that are passed in to the DOM
         singlePostContainer.appendChild(postDiv);
-     
-        // insert the if the user has not liked the post logic here
-        singlePostContainer.appendChild(likeButton);
+        
+        // // Check if the logged-in user has already liked this post
+        // const userHasLiked = post.likes.some(like => like.liker === $('#logged-in-user').text());
+        
+        // if (userHasLiked) {
+        //     // Create an unlike button
+        //     const unlikeButton = document.createElement('input');
+        //     unlikeButton.className = 'btn btn-outline-secondary';
+        //     unlikeButton.type = 'submit';
+        //     unlikeButton.id = `unlike-submit-${post.id}`;
+        //     unlikeButton.formmethod = 'post';
+        //     unlikeButton.value = 'Unlike';
 
-        // insert the else the user has liked the post logic here
-        singlePostContainer.appendChild(unlikeButton);
+        //     // append it to the DOM
+        //     singlePostContainer.appendChild(unlikeButton);  
+        // } 
+        // else {
+        //     // Create a like button
+        //     const likeButton = document.createElement('input');
+        //     likeButton.className = 'btn btn-outline-danger';
+        //     likeButton.type = 'submit';
+        //     likeButton.id = `like-submit-${post.id}`;
+        //     likeButton.formmethod = 'post';
+        //     likeButton.value = 'Like';
+
+        //     // append it to the DOM
+        //     singlePostContainer.appendChild(likeButton);
+        // }
     });
 };
+
+// ----------------------------------------------
+// HELPER FUNCTIONS
+// ----------------------------------------------
 
 // Loads all posts in the DB then adds them to the DOM.
 // This function is run on page load.
@@ -101,19 +134,11 @@ function show_all_posts() {
     document.querySelector('#new-post').style.display = 'block';
     document.querySelector('#all-existing-posts').style.display = 'block';
     document.querySelector('#user-profile-information').style.display = 'none';
-    document.querySelector('#user-profile-posts').style.display = 'none';
-     
 };
 
 
 // Show a user's profile information
 function show_user_page(username) {
-    // Show particular user's profile information and posts, and hide other views
-    document.querySelector('#all-posts-title').style.display = 'none';
-    document.querySelector('#user-profile-page-title').style.display = 'block';
-    document.querySelector('#new-post').style.display = 'none';
-    document.querySelector('#all-existing-posts').style.display = 'block';
-    document.querySelector('#user-profile-information').style.display = 'block';
 
     // Add the user's profile name to the page title
     const profilePageTitle = document.getElementById('user-profile-page-title');
