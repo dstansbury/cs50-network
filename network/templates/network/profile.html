@@ -1,17 +1,23 @@
 {% extends "network/layout.html" %}
 
 {% block body %}
-    <div id="index-container">
-        <div id="user-profile-page-title">
-        </div>
 
-         <!-- Section showing a particulary user's profile-->
-         <div class="posts" id="user-profile-information">
-        </div> 
-        
-        <!-- Section showing all existing posts, defined in network.js-->
-        <div class="posts" id="user-posts">
-        </div>
-       
+<div id="profile-container">
+    <div id="profile-title">
+        <h1> User Profile </h1>
     </div>
+
+    <!-- Section showing a particulary user's profile-->
+    <div class="posts" id="user-profile-information">  
+    </div> 
+    
+    <!-- Section showing all existing posts, defined in network.js-->
+    <div class="posts" id="page-posts">
+    </div>
+
+</div>
+
+<script>
+    const userID = {{ userID }};
+</script>
 {% endblock %}
