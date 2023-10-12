@@ -1,13 +1,14 @@
 /* Stylesheet */
 
 /* Styles the main container of the index page */
-#index-container {
+#index-container, 
+#profile-container{
     padding: 10px;
     margin-bottom: 10px;
-    font: 15px sans-serif;
+    font: 15px Helvetica;
 }
 
-/* Post divs on index page */
+/* Post divs */
 .posts {
     border: 1px solid #ccc;
     border-radius: 5px;

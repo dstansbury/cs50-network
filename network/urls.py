@@ -8,5 +8,8 @@ urlpatterns = [
     path("login", views.login_view, name="login"),
     path("logout", views.logout_view, name="logout"),
     path("register", views.register, name="register"),
+    #error handling path, in case no user ID is provided
+    path("profile/", views.no_user_profile, name="no_user_profile"),
+    #actual path to profile page
     path("profile/<int:userID>", views.profile, name="profile")
 ]

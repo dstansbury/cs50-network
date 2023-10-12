@@ -10,13 +10,16 @@ document.addEventListener('DOMContentLoaded', function() {
             event.preventDefault();  // Prevent the default form submission behavior
             // After posting, you may want to reload the posts
             load_all_posts();
-            show_all_posts();
         });
     }
 
     // If the index page, load all posts
     if (document.querySelector("#index-container")) {
         load_all_posts();
+        if (window.location.search.includes("following=true")) {
+            document.querySelector("#all-posts-title h1").innerHTML = "Posts by People you Follow";
+            document.querySelector("#new-post").style.display = "none";
+        }
     }
 
     // If the profile page, show the user's profile and load their posts
@@ -32,7 +35,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // gets all the posts from the DB
 function fetchAllPostsData() {
-    return fetch(`/`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    // Check if the URL has the "following=true" parameter
+    let url = "/";
+    if (window.location.search.includes("following=true")) {
+        url += "?following=true";
+    }
+    
+    // fetch relevant posts from the DB based on the url
+    return fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(response => response.json())
         .then(posts => {
             console.log('Fetched posts data:', posts);
@@ -83,7 +93,7 @@ function add_posts(posts) {
         postDiv.className = 'postDiv';
         postDiv.innerHTML = `
             <div id="post-poster">
-                <a class="btn btn-link" href="profile/${post.posterID}">
+                <a class="btn btn-link" href="/profile/${post.posterID}">
                     ${post.poster}
                 </a>
             </div>
