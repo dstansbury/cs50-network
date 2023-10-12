@@ -47,7 +47,9 @@ def get_posts(userID=None, active_user=None):
         post_data = post.serialize()
         if active_user:
             post_data['user_liked'] = Like.objects.filter(post=post, liker=active_user).exists()
+        post_data['likes_count'] = Like.objects.filter(post=post).count()
         serialized_posts.append(post_data)
+
     
     return serialized_posts
    
@@ -95,12 +97,47 @@ def new_post(request):
                 poster=request.user, 
                 body=request.POST["new-post-body"]
                 )
-            newPost.save()
             return HttpResponseRedirect(reverse("index"))
     else:
         messages.error(request, 'Cannot create empty post.')
         return HttpResponseRedirect(reverse("index"))
         
+"""
+LIKE / UNLIKE BUTTON FUNCTIONS
+"""
+@login_required
+@require_POST
+def like_post(request, post_id):
+    try:
+        post = Post.objects.get(pk=post_id)
+        # Check if the like already exists
+        existing_like = Like.objects.filter(liker=request.user, post=post)
+        if existing_like.exists():
+            return JsonResponse({"error": "Post already liked by user."}, status=400)
+        
+        else:
+            # Create the like since it doesn't exist
+            Like.objects.create(liker=request.user, post=post)
+            return JsonResponse({"likes_count": Like.objects.filter(post=post).count()}, status=201)
+    except:
+        return JsonResponse({"error": "Unable to like post."}, status=400)
+
+@login_required
+@require_POST
+def unlike_post(request, post_id):
+    try:
+        post = Post.objects.get(pk=post_id)
+        if Like.objects.filter(post=post).count() <= 0:
+            return JsonResponse({"error": "Cannot unlike a post with zero likes."}, status=400)
+        else:
+            like = Like.objects.filter(liker=request.user, post=post).first()
+            if like:
+                like.delete()
+            else:
+                return JsonResponse({"error": "Post not liked by user."}, status=400)
+            return JsonResponse({"likes_count": Like.objects.filter(post=post).count()}, status=200)
+    except:
+        return JsonResponse({"error": "Unable to unlike post."}, status=400)
 
 
 """

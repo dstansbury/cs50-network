@@ -25,22 +25,22 @@
     margin-top: 15px;
 }
 
-.postDiv #post-poster,
-.postDiv #post-timestamp {
+.post-poster,
+.post-timestamp {
     margin-bottom: 5px;
 }
 
-.postDiv #post-body {
+.post-body {
     margin-top: 20px;
     margin-bottom: 20px;
 }
 
-#post-poster {
+.post-poster {
     font-weight: bold; 
     font-size: 1.1em;
 }
 
-#post-timestamp {
+.post-timestamp {
     color: #777;
 }
 

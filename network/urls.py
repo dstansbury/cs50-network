@@ -12,5 +12,7 @@ urlpatterns = [
     path("profile/", views.no_user_profile, name="no_user_profile"),
     #actual path to profile page
     path("profile/<int:userID>", views.profile, name="profile"),
-    path("new-post", views.new_post, name="new_post")
+    path("new-post", views.new_post, name="new_post"),
+    path('like/<int:post_id>', views.like_post, name="like_post"),
+    path('unlike/<int:post_id>', views.unlike_post, name="unlike_post"),
 ]

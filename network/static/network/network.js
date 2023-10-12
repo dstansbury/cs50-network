@@ -18,6 +18,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+//----------------------------------------------
+// CONSTANTS NEEDED ACROSS VARIOUS FUNCTIONS
+//----------------------------------------------
+const csrftoken = document.querySelector('[name=csrf-token]').content;
 
 // ----------------------------------------------
 // FETCH FROM SERVER FUNCTIONS
@@ -90,14 +94,14 @@ function add_posts(posts) {
         }
 
         postDiv.innerHTML = `
-            <div id="post-poster">
+            <div class="post-poster" id="post-poster-${post.id}">
                 <a href="/profile/${post.posterID}">
                     ${post.poster}
                 </a>
             </div>
-            <div id="post-body">${post.body}</div>
-            <div id="post-timestamp">${post.timestamp}</div>
-            <div id="post-likes">❤️ ${post.likes_count}</div>`;
+            <div class="post-body" id="post-body-${post.id}">${post.body}</div>
+            <div class="post-timestamp" id="post-timestamp-${post.id}">${post.timestamp}</div>
+            <div class="post-likes" id="post-likes-${post.id}">❤️ ${post.likes_count}</div>`;
 
         // add the post inside the Post Container that are passed in to the DOM
         singlePostContainer.appendChild(postDiv);
@@ -105,26 +109,31 @@ function add_posts(posts) {
         // 
         // LIKE / UNLIKE BUTTON LOGIC
         //
-        const likeBtn = document.createElement('button');
+        
         if(post.user_liked) {
-            likeBtn.className = 'btn btn-outline-primary';
-            likeBtn.innerText = 'Unlike';
+            const unlikeBtn = document.createElement('button');
+            unlikeBtn.className = 'btn btn-outline-primary';
+            unlikeBtn.id = `liketoggle-btn-${post.id}`;
+            unlikeBtn.innerText = 'Unlike';
+            unlikeBtn.onclick = () => unlikePost(post.id);
+
+            // Add the like button to the singlePostContainer
+            singlePostContainer.appendChild(unlikeBtn);
         } else {
+            const likeBtn = document.createElement('button');
             likeBtn.className = 'btn btn-primary';
             likeBtn.innerText = 'Like';
+            likeBtn.id = `liketoggle-btn-${post.id}`;
+            likeBtn.onclick = () => likePost(post.id);
+            
+            // Add the unlike button to the singlePostContainer
+            singlePostContainer.appendChild(likeBtn);
         }
-
-        // Add the like button to the singlePostContainer
-        singlePostContainer.appendChild(likeBtn);
 
         // Add a container for each post
         postsContainer.appendChild(singlePostContainer);
     });
 }
-
-// ----------------------------------------------
-// HELPER FUNCTIONS
-// ----------------------------------------------
 
 // Loads all posts in the DB then adds them to the DOM.
 // This function is run on index page load.
@@ -155,3 +164,71 @@ function load_user_page(userID) {
         add_posts(userProfileData.userPosts);
     });
 }
+
+// ----------------------------------------------
+// LIKE / UNLIKE FUNCTIONS
+// ----------------------------------------------
+function likePost(postID) {
+    fetch(`/like/${postID}`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Update likes count on DOM and toggle button
+        updateLikesOnDOM(postID, data.likes_count, true);
+    })
+    .catch(error => {
+        console.error('Error liking post:', error);
+    });
+}
+
+function unlikePost(postID) {
+    const currentLikes = parseInt(document.querySelector(`#post-likes-${postID}`).textContent.trim().split(" ")[1]);
+    if (currentLikes <= 0) {
+        console.log("Cannot unlike a post with zero likes.");
+        return;
+    }
+    fetch(`/unlike/${postID}`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Update likes count on DOM and toggle button
+        updateLikesOnDOM(postID, data.likes_count, false);
+    })
+    .catch(error => {
+        console.error('Error unliking post:', error);
+    });
+}
+
+
+function updateLikesOnDOM(postID, likesCount, liked) {
+    document.querySelector(`#post-likes-${postID}`).textContent = `❤️ ${likesCount}`;
+    
+    const currentButton = document.querySelector(`#liketoggle-btn-${postID}`);
+    let newButton;
+
+    if (liked) {
+        newButton = document.createElement('button');
+        newButton.className = 'btn btn-outline-primary';
+        newButton.innerText = 'Unlike';
+        newButton.onclick = () => unlikePost(postID);
+    } else {
+        newButton = document.createElement('button');
+        newButton.className = 'btn btn-primary';
+        newButton.innerText = 'Like';
+        newButton.onclick = () => likePost(postID);
+    }
+
+    newButton.id = `liketoggle-btn-${postID}`;
+    
+    currentButton.parentNode.replaceChild(newButton, currentButton);
+}
+
+
