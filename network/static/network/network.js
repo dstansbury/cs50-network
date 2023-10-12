@@ -3,16 +3,6 @@
 // ----------------------------------------------
 document.addEventListener('DOMContentLoaded', function() {
 
-    // when page loads, if the new-post-form is there, add a listener for it
-    if (document.querySelector("#new-post-form")) {
-        document.querySelector("#new-post-form").addEventListener("submit", function(event) {    
-            // Your form submission logic goes here
-            event.preventDefault();  // Prevent the default form submission behavior
-            // After posting, you may want to reload the posts
-            load_all_posts();
-        });
-    }
-
     // If the index page, load all posts
     if (document.querySelector("#index-container")) {
         load_all_posts();
@@ -101,7 +91,7 @@ function add_posts(posts) {
 
         postDiv.innerHTML = `
             <div id="post-poster">
-                <a class="btn btn-link" href="/profile/${post.posterID}">
+                <a href="/profile/${post.posterID}">
                     ${post.poster}
                 </a>
             </div>

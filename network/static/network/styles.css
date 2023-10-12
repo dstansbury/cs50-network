@@ -26,14 +26,18 @@
 }
 
 .postDiv #post-poster,
-.postDiv #post-body,
 .postDiv #post-timestamp {
     margin-bottom: 5px;
 }
 
+.postDiv #post-body {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
 #post-poster {
-    font-weight: bold;
-    font-size: 1.2em;
+    font-weight: bold; 
+    font-size: 1.1em;
 }
 
 #post-timestamp {

@@ -8,6 +8,7 @@ from django.shortcuts import HttpResponse, HttpResponseRedirect, render
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models.query import QuerySet
+from django.views.decorators.http import require_POST
 
 from .models import User, Post, Follow, Like
 
@@ -51,8 +52,10 @@ def get_posts(userID=None, active_user=None):
     return serialized_posts
    
 """
-MAIN INDEX PAGE FUNCTION
+MAIN INDEX PAGE FUNCTIONS
 """
+
+# render the index page after getting necessary data
 def index(request):
     # Check if the user is logged in
     if not request.user.is_authenticated:
@@ -79,6 +82,25 @@ def index(request):
     #If it's not an AJAX request, render the index page
     else:
         return render(request, "network/index.html")
+    
+# create a new post
+@login_required
+@require_POST
+def new_post(request):
+    if request.method=="POST":
+         # Check if postBody is not empty
+         
+        if request.POST.get("new-post-body"): 
+            newPost = Post.objects.create(
+                poster=request.user, 
+                body=request.POST["new-post-body"]
+                )
+            newPost.save()
+            return HttpResponseRedirect(reverse("index"))
+    else:
+        messages.error(request, 'Cannot create empty post.')
+        return HttpResponseRedirect(reverse("index"))
+        
 
 
 """

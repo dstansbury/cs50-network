@@ -21,9 +21,10 @@
         <!-- Section for users to write a new post-->
         <div class="posts" id="new-post">
             <h3>New Post</h3>
-            <form id="new-post-form">
-                <textarea class="form-control" id="new-post-form" placeholder="New post"></textarea>
-                <input type="submit" class="btn btn-primary" id="new-post-submit" formmethod="post" value="Post"/>
+            <form id="new-post-form" action="{% url 'new_post' %}" method="POST">
+                {% csrf_token %}
+                <textarea class="form-control" id="new-post-textarea" name="new-post-body" placeholder="New post"></textarea>
+                <input type="submit" class="btn btn-primary" id="new-post-submit" value="Post"/>
             </form>
         </div>
 
