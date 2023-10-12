@@ -17,11 +17,11 @@ GET_POSTS HELPER FUNCTION
     Get posts. If there is a userID object, it checks whether it is a list or QuerySet, 
     or a single ID and it filters the posts by that user(s). If nothing is provided,
     it returns all the posts.
-    
+
     Returns serialized posts, with the order reversed so newest posts appear first.
     
 """
-def get_posts(userID=None):
+def get_posts(userID=None, active_user=None):
     
     # If userID is a list or a QuerySet, filter posts by multiple users
     # this is needed for the Following page
@@ -38,11 +38,15 @@ def get_posts(userID=None):
     else:
         posts = Post.objects.all().order_by('-timestamp')
 
-    """
-        ADD LOGIC ABOUT WHETHER A USER HAS LIKED A POST
-    """
-    
-    serialized_posts = [post.serialize() for post in posts]
+    # Create a serialized list of posts
+    # if there is a logged in user, add a check to see if the post has been liked
+    # by the active user
+    serialized_posts = []
+    for post in posts:
+        post_data = post.serialize()
+        if active_user:
+            post_data['user_liked'] = Like.objects.filter(post=post, liker=active_user).exists()
+        serialized_posts.append(post_data)
     
     return serialized_posts
    
@@ -64,13 +68,11 @@ def index(request):
         # get only the posts from the users they follow
         if following_only:
             following_users = Follow.objects.filter(follower=request.user).values_list('follows', flat=True)
-            print(f"following_users are {following_users}")
-            posts = get_posts(following_users)
-            print(f"posts are {posts}")
+            posts = get_posts(following_users, request.user)
         
         # otherwise, get all the posts
         else:
-            posts = get_posts()
+            posts = get_posts(None, request.user)
 
         return JsonResponse(posts, safe=False)
         
@@ -84,7 +86,7 @@ PROFILE PAGE FUNCTIONS
 """  
 # Correct path
 def profile(request, userID):
-    print(f"Profile view accessed with userID: {userID}")
+    
     # Check if the user is logged in
     if not request.user.is_authenticated:
         return HttpResponseRedirect(reverse("login"))
@@ -93,7 +95,7 @@ def profile(request, userID):
     # and return them as JSON
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         
-        userPosts = get_posts(userID)
+        userPosts = get_posts(userID, request.user)
         userName = User.objects.get(id=userID).username  
         numFollowers = Follow.objects.filter(follows=userID).count()
         numFollows = Follow.objects.filter(follower=userID).count()

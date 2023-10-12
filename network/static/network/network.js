@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (document.querySelector("#index-container")) {
         load_all_posts();
         if (window.location.search.includes("following=true")) {
-            document.querySelector("#all-posts-title h1").innerHTML = "Posts by People you Follow";
+            document.querySelector("#all-posts-title h1").innerHTML = "Following";
             document.querySelector("#new-post").style.display = "none";
         }
     }
@@ -76,7 +76,9 @@ function fetchUserProfileInfo(userID) {
 // adds posts to the DOM
 function add_posts(posts) {
     const postsContainer = document.getElementById('page-posts');
-    postsContainer.innerHTML = '';  // Clear existing content before appending new posts
+    
+    // Clear existing content before appending new posts
+    postsContainer.innerHTML = '';  
 
     // Sort the posts by timestamp in descending order (newest first)
     posts.sort((a, b) => {
@@ -85,12 +87,18 @@ function add_posts(posts) {
         return dateB - dateA;
     });
 
-    posts.forEach(post => {
+    posts.forEach((post, index) => {
         const singlePostContainer = document.createElement('div');
         singlePostContainer.className = 'singlePostContainer';
         
         const postDiv = document.createElement('div');
         postDiv.className = 'postDiv';
+
+        // If it's the first post, adjust the top margin
+        if (index === 0) {
+        postDiv.style.marginTop = "0px";
+        }
+
         postDiv.innerHTML = `
             <div id="post-poster">
                 <a class="btn btn-link" href="/profile/${post.posterID}">
@@ -99,13 +107,28 @@ function add_posts(posts) {
             </div>
             <div id="post-body">${post.body}</div>
             <div id="post-timestamp">${post.timestamp}</div>
-            <div id="post-likes" style="color: #d9534f">Num Likes</div>`;
-        
-        // Add a container for each post
-        postsContainer.appendChild(singlePostContainer);
+            <div id="post-likes">❤️ ${post.likes_count}</div>`;
 
         // add the post inside the Post Container that are passed in to the DOM
         singlePostContainer.appendChild(postDiv);
+
+        // 
+        // LIKE / UNLIKE BUTTON LOGIC
+        //
+        const likeBtn = document.createElement('button');
+        if(post.user_liked) {
+            likeBtn.className = 'btn btn-outline-primary';
+            likeBtn.innerText = 'Unlike';
+        } else {
+            likeBtn.className = 'btn btn-primary';
+            likeBtn.innerText = 'Like';
+        }
+
+        // Add the like button to the singlePostContainer
+        singlePostContainer.appendChild(likeBtn);
+
+        // Add a container for each post
+        postsContainer.appendChild(singlePostContainer);
     });
 }
 

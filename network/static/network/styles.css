@@ -21,7 +21,7 @@
     border: 1px solid #ccc;
     border-radius: 5px;
     padding: 10px;
-    margin-bottom: 15px;
+    margin-bottom: 0px;
     margin-top: 15px;
 }
 
@@ -54,6 +54,7 @@
 }
 
 /* Button styles */
-.btn-primary {
+.btn-primary,
+.btn-outline-primary {
     margin-top: 10px;
 }
