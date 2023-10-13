@@ -158,13 +158,15 @@ def profile(request, userID):
         userName = User.objects.get(id=userID).username  
         numFollowers = Follow.objects.filter(follows=userID).count()
         numFollows = Follow.objects.filter(follower=userID).count()
+        activeUserFollows = Follow.objects.filter(follower=request.user, follows=userID).exists()
 
         # Return data in structured format
         userProfileData = {
             "userName": userName,
             "userPosts": userPosts,
             "numFollowers": numFollowers,
-            "numFollows": numFollows
+            "numFollows": numFollows,
+            "activeUserFollows": activeUserFollows
         }
         
         return JsonResponse(userProfileData, safe=False)
@@ -178,7 +180,56 @@ def no_user_profile(request):
     # create an error message
     messages.warning(request, 'Invalid profile access. Redirecting to the main page.')
     # redirect to the index page with the message to display.
-    return HttpResponseRedirect('/')  
+    return HttpResponseRedirect('/') 
+
+"""
+FOLLOW AND UNFOLLOW FUNCTIONS
+"""
+@login_required
+@require_POST
+def follow_user(request, userID):
+    try:
+        user_to_follow = User.objects.get(pk=userID)
+
+        # Check if the follow relationship already exists
+        existing_follow = Follow.objects.filter(follower=request.user, follows=user_to_follow)
+        
+        if existing_follow.exists():
+            return JsonResponse({"error": "Profile already followed by active user"}, status=400)
+        
+        else:
+            # Create the follow relationship since it doesn't exist
+            Follow.objects.create(follower=request.user, follows=user_to_follow)
+            return JsonResponse({"activeUserFollows": True, "follower_count": Follow.objects.filter(follows=user_to_follow).count()}, status=201)
+    
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found."}, status=404)
+    except Exception as e:
+        print(e)  # Print out the actual error
+        return JsonResponse({"error": "Unable to follow profile."}, status=400)
+    
+@login_required
+@require_POST
+def unfollow_user(request, userID):
+    try:
+        user_to_unfollow = User.objects.get(pk=userID)
+        
+        # Check if the follow already exists
+        existing_follow = Follow.objects.filter(follower=request.user, follows=user_to_unfollow)
+        
+        if not existing_follow.exists():
+            return JsonResponse({"error": "Profile already unfollowed by active user"}, status=400)
+        
+        else:
+            # Unfollow the user
+            existing_follow.delete()
+            return JsonResponse({"activeUserFollows": False, "follower_count": Follow.objects.filter(follows=user_to_unfollow).count()}, status=201)
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found."}, status=404)
+    except Exception as e:
+        print(e)  # Print out the actual error
+        return JsonResponse({"error": "Unable to unfollow profile."}, status=400)
+
     
 """
 LOGIN PAGE FUNCTION

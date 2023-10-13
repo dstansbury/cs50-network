@@ -107,7 +107,7 @@ function add_posts(posts) {
         singlePostContainer.appendChild(postDiv);
 
         // 
-        // LIKE / UNLIKE BUTTON LOGIC
+        // Like / Unlike button logic
         //
         
         if(post.user_liked) {
@@ -150,7 +150,7 @@ function load_user_page(userID) {
     // Get the user's profile information
     fetchUserProfileInfo(userID)
     .then(userProfileData => {    
-        
+
         // Add the user's profile information
         const profileInformation = document.getElementById('user-profile-information');
         profileInformation.innerHTML = `
@@ -158,9 +158,31 @@ function load_user_page(userID) {
             <div class="postDiv">
                 <div id="profile-followers"><strong>Followers: </strong>${userProfileData.numFollowers}</div>
                 <div id="profile-following"><strong>Following: </strong>${userProfileData.numFollows}</div>
-            </div>
-            <button type="submit" class="btn btn-primary" id="follow-user-${userID}" formmethod="post">Follow ${userProfileData.userName}</button>`;
-            // Add the user's posts to the DOM
+            </div>`;
+        
+        // check if the user is already following the profile
+        if(userProfileData.activeUserFollows) {
+            const unfollowBtn = document.createElement('button');
+            unfollowBtn.className = 'btn btn-outline-primary';
+            unfollowBtn.id = `followtoggle-btn-${userID}`;
+            unfollowBtn.innerText = `Unfollow ${userProfileData.userName}`;
+            unfollowBtn.onclick = () => unfollowUser(userID, userProfileData.userName);
+
+            // Add the unfollow button to the DOM
+            profileInformation.appendChild(unfollowBtn);
+        } 
+        else {
+            const followBtn = document.createElement('button');
+            followBtn.className = 'btn btn-primary';
+            followBtn.innerText = `Follow ${userProfileData.userName}`;
+            followBtn.id = `followtoggle-btn-${userID}`;
+            followBtn.onclick = () => followUser(userID, userProfileData.userName);
+
+            // Add the follow button to the DOM
+            profileInformation.appendChild(followBtn);
+        }
+
+        // Add the user's posts to the DOM
         add_posts(userProfileData.userPosts);
     });
 }
@@ -231,4 +253,61 @@ function updateLikesOnDOM(postID, likesCount, liked) {
     currentButton.parentNode.replaceChild(newButton, currentButton);
 }
 
+// ----------------------------------------------
+// FOLLOW / UNFOLLOW FUNCTIONS
+// ----------------------------------------------
+
+function followUser(userID, username) {
+    fetch(`/follow/${userID}`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Update follow button to unfollow button
+        updateFollowButton(userID, username, true, data.follower_count);
+    })
+    .catch(error => {
+        console.error('Error liking post:', error);
+    });
+}
+
+function unfollowUser(userID, username) {
+    fetch(`/unfollow/${userID}`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Update unfollow button to follow button
+        updateFollowButton(userID, username, false, data.follower_count);
+    })
+    .catch(error => {
+        console.error('Error unliking post:', error);
+    });
+}
+
+function updateFollowButton(userID, username, followed, follower_count) {
+    document.querySelector(`#profile-followers`).innerHTML = `<strong>Followers: </strong>${follower_count}`;
+
+    const currentButton = document.querySelector(`#followtoggle-btn-${userID}`);
+    const newButton = document.createElement('button');
+    
+    if (followed) {
+        newButton.className = 'btn btn-outline-primary';
+        newButton.innerText = `Unfollow ${username}`;
+        newButton.onclick = () => unfollowUser(userID, username);
+    } else {
+        newButton.className = 'btn btn-primary';
+        newButton.innerText = `Follow ${username}`;
+        newButton.onclick = () => followUser(userID, username);
+    }
+
+    newButton.id = `followtoggle-btn-${userID}`;
+    currentButton.parentNode.replaceChild(newButton, currentButton); 
+}
 
