@@ -160,8 +160,14 @@ function load_user_page(userID) {
                 <div id="profile-following"><strong>Following: </strong>${userProfileData.numFollows}</div>
             </div>`;
         
+        // check if the user is on their own profile page
+        // if so, do nothing
+        if (userProfileData.activeUser === userProfileData.userName) {
+        }
+        
         // check if the user is already following the profile
-        if(userProfileData.activeUserFollows) {
+        // if so, add an unfollow button
+        else if(userProfileData.activeUserFollows) {
             const unfollowBtn = document.createElement('button');
             unfollowBtn.className = 'btn btn-outline-primary';
             unfollowBtn.id = `followtoggle-btn-${userID}`;
@@ -171,6 +177,8 @@ function load_user_page(userID) {
             // Add the unfollow button to the DOM
             profileInformation.appendChild(unfollowBtn);
         } 
+        
+        // if not, add a follow button
         else {
             const followBtn = document.createElement('button');
             followBtn.className = 'btn btn-primary';

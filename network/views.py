@@ -166,7 +166,8 @@ def profile(request, userID):
             "userPosts": userPosts,
             "numFollowers": numFollowers,
             "numFollows": numFollows,
-            "activeUserFollows": activeUserFollows
+            "activeUserFollows": activeUserFollows,
+            "activeUser": request.user.username
         }
         
         return JsonResponse(userProfileData, safe=False)
