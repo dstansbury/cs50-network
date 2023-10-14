@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', function() {
 //----------------------------------------------
 const csrftoken = document.querySelector('[name=csrf-token]').content;
 
+// to manage pagination
+let page = 1;
+
 // ----------------------------------------------
 // HELPER FUNCTION - TIME/DATE
 // ----------------------------------------------
@@ -49,10 +52,17 @@ function formatDate(date) {
 
 // gets all the posts from the DB
 function fetchAllPostsData() {
-    // Check if the URL has the "following=true" parameter
+    // base url
     let url = "/";
+
+    // Check if the URL has the "following=true" parameter
     if (window.location.search.includes("following=true")) {
         url += "?following=true";
+        // Add the page parameter after the "following=true"
+        url += `&page=${page}`;
+    } else {
+        // If no other query parameters, add the page parameter directly
+        url += `?page=${page}`;
     }
     
     // fetch relevant posts from the DB based on the url
@@ -70,7 +80,10 @@ function fetchAllPostsData() {
 
 // gets a particular user's profile information from the DB
 function fetchUserProfileInfo(userID) {
-    return fetch(`/profile/${userID}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    // Adding page parameter to the URL
+    const url = `/profile/${userID}?page=${page}`;
+
+    return fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
     .then(response => response.json())
     .then(userProfileData => {
         console.log('Fetched profile data for username:', userProfileData);
@@ -186,6 +199,31 @@ function add_posts(posts) {
         // Add a container for each post
         postsContainer.appendChild(singlePostContainer);
     });
+    
+    // Add pagination buttons
+    const paginationContainer = document.getElementById('pagination-container');
+    
+    paginationContainer.innerHTML = `
+        <div id="page-number">Page ${page}</div>
+        <button class="btn btn-primary" id="prev-btn" onclick="prevPage()">Previous</button>
+        <button class="btn btn-primary" id="next-btn" onclick="nextPage()">Next</button>`;
+
+    // Hide the previous button if on the first page
+    if (page === 1) {
+        document.getElementById('prev-btn').style.display = 'none';
+    } else {
+        document.getElementById('prev-btn').style.display = 'block';
+    }
+
+    // Hide the next button if on the last page
+    if (posts.length < 10) {
+        document.getElementById('next-btn').style.display = 'none';
+    } else {
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    
+
 }
 
 // Loads all posts in the DB then adds them to the DOM.
@@ -353,6 +391,7 @@ function unfollowUser(userID, username) {
     });
 }
 
+// Updates the follow button type and the count of followers
 function updateFollowButton(userID, username, followed, follower_count) {
     document.querySelector(`#profile-followers`).innerHTML = `<strong>Followers: </strong>${follower_count}`;
 
@@ -452,4 +491,29 @@ function update_post(postID, new_post_body) {
 
     // Unhide the edit button
     document.getElementById(`edit-btn-${postID}`).style.display = 'block';
+}
+
+// ----------------------------------------------
+// PAGINATION FUNCTIONS
+// ----------------------------------------------
+
+// Advances one page
+function nextPage() {
+    page++;
+    fetchAllPostsData().then(posts => {
+        add_posts(posts);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+}
+
+// Moves back one page
+function prevPage() {
+    // control so that page number does not go below 1
+    if (page > 1) { 
+        page--;
+        fetchAllPostsData().then(posts => {
+            add_posts(posts);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
 }

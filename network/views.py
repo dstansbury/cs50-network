@@ -4,12 +4,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import IntegrityError
 from django.http import JsonResponse
-from django.shortcuts import HttpResponse, HttpResponseRedirect, render
+from django.shortcuts import HttpResponseRedirect, render
 from django.urls import reverse
-from django.views.decorators.csrf import csrf_exempt
 from django.db.models.query import QuerySet
 from django.views.decorators.http import require_POST
 from django.utils import timezone
+from django.core.paginator import Paginator
 
 from .models import User, Post, Follow, Like
 
@@ -23,7 +23,7 @@ GET_POSTS HELPER FUNCTION
     Returns serialized posts, with the order reversed so newest posts appear first.
     
 """
-def get_posts(userID=None, active_user=None):
+def get_posts(userID=None, active_user=None, page=1):
     
     # If userID is a list or a QuerySet, filter posts by multiple users
     # this is needed for the Following page
@@ -40,11 +40,17 @@ def get_posts(userID=None, active_user=None):
     else:
         posts = Post.objects.all().order_by('-timestamp')
 
+    # Create a Paginator object with 10 posts per page
+    paginator = Paginator(posts, 10)
+
+    # Get the posts for the current page
+    current_page_posts = paginator.get_page(page)
+
     # Create a serialized list of posts
     # if there is a logged in user, add a check to see if the post has been liked
     # by the active user
     serialized_posts = []
-    for post in posts:
+    for post in current_page_posts:
         post_data = post.serialize()
         if active_user:
             post_data['user_liked'] = Like.objects.filter(post=post, liker=active_user).exists()
@@ -53,6 +59,7 @@ def get_posts(userID=None, active_user=None):
     
     # Add the active user to the serialized list so we have access to it client-side
     serialized_posts.append({"activeUser": active_user.username})
+
     return serialized_posts
    
 """
@@ -70,16 +77,17 @@ def index(request):
     
     #grab all the posts from the DB and return them as JSON
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        page = request.GET.get('page', 1)
         
         # If the user is only interested in posts from people they follow
         # get only the posts from the users they follow
         if following_only:
             following_users = Follow.objects.filter(follower=request.user).values_list('follows', flat=True)
-            posts = get_posts(following_users, request.user)
+            posts = get_posts(following_users, request.user, page)
         
         # otherwise, get all the posts
         else:
-            posts = get_posts(None, request.user)
+            posts = get_posts(None, request.user, page)
 
         return JsonResponse(posts, safe=False)
         
@@ -180,8 +188,8 @@ def profile(request, userID):
     #grab all the user's posts from the DB, and their follower and follows counts
     # and return them as JSON
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        
-        userPosts = get_posts(userID, request.user)
+        page = request.GET.get('page', 1)
+        userPosts = get_posts(userID, request.user, page)
         userName = User.objects.get(id=userID).username  
         numFollowers = Follow.objects.filter(follows=userID).count()
         numFollows = Follow.objects.filter(follower=userID).count()
@@ -316,3 +324,4 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
+    

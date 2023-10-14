@@ -63,3 +63,18 @@
 .btn-outline-primary {
     margin-top: 10px;
 }
+
+/* Pagination */
+#pagination-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center; 
+}
+
+/* Display inner elements of pagination container inline */
+#page-number, 
+#prev-btn, 
+#next-btn {
+    margin-left: 5px;
+    margin-right: 5px;
+}
