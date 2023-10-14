@@ -17,4 +17,5 @@ urlpatterns = [
     path('unlike/<int:post_id>', views.unlike_post, name="unlike_post"),
     path('follow/<int:userID>', views.follow_user, name="follow_user"),
     path('unfollow/<int:userID>', views.unfollow_user, name="unfollow_user"),
+    path('edit/<int:post_id>', views.edit, name="edit"),
 ]

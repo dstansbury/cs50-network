@@ -26,7 +26,8 @@
 }
 
 .post-poster,
-.post-timestamp {
+.post-timestamp,
+.post-edit {
     margin-bottom: 5px;
 }
 

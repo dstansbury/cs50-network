@@ -10,6 +10,8 @@ class Post(models.Model):
     poster = models.ForeignKey("User", on_delete=models.CASCADE, related_name="posts")
     body = models.TextField(blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+    edited = models.BooleanField(default=False)
+    edited_timestamp = models.DateTimeField(blank=True, null=True)
 
     def serialize(self):
         return {
@@ -18,6 +20,8 @@ class Post(models.Model):
             "posterID": self.poster.id,
             "body": self.body,
             "timestamp": self.timestamp.strftime("%b %d %Y, %I:%M %p"),
+            "edited": self.edited,
+            "edited_timestamp": self.edited_timestamp.strftime("%b %d %Y, %I:%M %p") if self.edited_timestamp else None,
         }
     
 class Follow(models.Model):

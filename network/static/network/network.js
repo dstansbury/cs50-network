@@ -24,6 +24,26 @@ document.addEventListener('DOMContentLoaded', function() {
 const csrftoken = document.querySelector('[name=csrf-token]').content;
 
 // ----------------------------------------------
+// HELPER FUNCTION - TIME/DATE
+// ----------------------------------------------
+function formatDate(date) {
+    const options = {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    };
+
+    let formattedDate = new Intl.DateTimeFormat('en-US', options).format(date);
+    
+    // Remove the comma that comes just after the year
+    formattedDate = formattedDate.replace(/(\d{4}),/, '$1');
+    return formattedDate;
+}
+
+// ----------------------------------------------
 // FETCH FROM SERVER FUNCTIONS
 // ----------------------------------------------
 
@@ -53,7 +73,7 @@ function fetchUserProfileInfo(userID) {
     return fetch(`/profile/${userID}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
     .then(response => response.json())
     .then(userProfileData => {
-        console.log('Fetched profile data for username:', userProfileData.userName);
+        console.log('Fetched profile data for username:', userProfileData);
         return userProfileData;
     })
     .catch(error => {
@@ -72,7 +92,13 @@ function add_posts(posts) {
     const postsContainer = document.getElementById('page-posts');
     
     // Clear existing content before appending new posts
-    postsContainer.innerHTML = '';  
+    postsContainer.innerHTML = '';
+    
+    // Get the active user from the posts array
+    const activeUser = posts[posts.length - 1].activeUser;
+
+    // Filter out posts in the returned array with the key "activeUser"
+    posts = posts.filter(post => !post.hasOwnProperty('activeUser'));
 
     // Sort the posts by timestamp in descending order (newest first)
     posts.sort((a, b) => {
@@ -93,6 +119,7 @@ function add_posts(posts) {
         postDiv.style.marginTop = "0px";
         }
 
+        // Add the post's HTML to the postDiv
         postDiv.innerHTML = `
             <div class="post-poster" id="post-poster-${post.id}">
                 <a href="/profile/${post.posterID}">
@@ -100,11 +127,37 @@ function add_posts(posts) {
                 </a>
             </div>
             <div class="post-body" id="post-body-${post.id}">${post.body}</div>
-            <div class="post-timestamp" id="post-timestamp-${post.id}">${post.timestamp}</div>
+            <div class="post-timestamp" id="post-timestamp-${post.id}"></div>
+            <div class="post-edit" id="post-edit-${post.id}"></div>
             <div class="post-likes" id="post-likes-${post.id}">❤️ ${post.likes_count}</div>`;
 
+        // Check if the post has already been edited
+        if (post.edited) {
+            postDiv.querySelector(`#post-timestamp-${post.id}`).innerHTML = ` (Edited) ${formatDate(new Date(post.edited_timestamp))}`;
+        }
+        else {
+            postDiv.querySelector(`#post-timestamp-${post.id}`).innerHTML = ` ${formatDate(new Date(post.timestamp))}`;
+        };
+        
         // add the post inside the Post Container that are passed in to the DOM
         singlePostContainer.appendChild(postDiv);
+
+        //
+        // Edit post logic
+        //
+        
+        // Check if the post is from the active user
+        if (post.poster === activeUser) {
+            const editLink = document.createElement('a');
+            editLink.href = `#`;
+            editLink.id = `edit-btn-${post.id}`;
+            editLink.textContent = 'Edit post';
+            editLink.onclick = (event) => {
+                event.preventDefault();
+                openEditForm(post.id, post.body);
+            };
+            postDiv.querySelector(`#post-edit-${post.id}`).appendChild(editLink);
+        }
 
         // 
         // Like / Unlike button logic
@@ -145,6 +198,8 @@ function load_all_posts() {
         });
 }
 
+//
+// PROFILE PAGE
 // This function is run on profile page load.
 function load_user_page(userID) {
     // Get the user's profile information
@@ -237,7 +292,6 @@ function unlikePost(postID) {
     });
 }
 
-
 function updateLikesOnDOM(postID, likesCount, liked) {
     document.querySelector(`#post-likes-${postID}`).textContent = `❤️ ${likesCount}`;
     
@@ -319,3 +373,83 @@ function updateFollowButton(userID, username, followed, follower_count) {
     currentButton.parentNode.replaceChild(newButton, currentButton); 
 }
 
+// ----------------------------------------------
+// EDIT POST FUNCTIONS
+// ----------------------------------------------
+
+// Create a form to edit the post
+function openEditForm(postID, currentBody) {
+    const postBody = document.getElementById(`post-body-${postID}`);
+
+    // Create and populate the form
+    const edit_form = document.createElement('form');
+    edit_form.id = `edit-form-${postID}`;
+    edit_form.className = 'edit-form';
+    edit_form.method = 'POST';
+
+    const edit_form_body = document.createElement('textarea');
+    edit_form_body.className = 'form-control';
+    edit_form_body.id = `edit-form-${postID}`;
+    edit_form_body.value = currentBody;
+
+    const submitEditButton = document.createElement('button');
+    submitEditButton.type = 'submit';
+    submitEditButton.className = 'btn btn-primary';
+    submitEditButton.innerText = 'Confirm edits';
+
+    // Add event listener for form submission
+    edit_form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const new_post_body = edit_form_body.value; 
+        update_post(postID, new_post_body);  
+    });
+
+    // Replace the post content with the edit form
+    edit_form.appendChild(edit_form_body);
+    edit_form.appendChild(submitEditButton);
+    postBody.innerHTML = '';
+    postBody.appendChild(edit_form);
+
+    // Hide the edit button
+    document.getElementById(`edit-btn-${postID}`).style.display = 'none';
+}
+
+// Update the post on the page
+function update_post(postID, new_post_body) {
+    // Update server
+    // Construct the data to send to the server
+    const postData = {
+        "new-post-body": new_post_body
+    };
+
+    // Use fetch to send the POST request to the server
+    fetch(`/edit/${postID}`, {
+        method: 'POST',
+        body: JSON.stringify(postData),
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            // If there's an error in the response data, alert the user
+            alert(data.error);
+        }
+        // If needed, you can add more handling logic here based on the response
+    })
+    .catch(error => {
+        console.error('Error updating post:', error);
+    });
+
+    // Update page without reload
+    // Remove the edit form and replace it with the updated post body
+    document.getElementById(`post-body-${postID}`).innerHTML = new_post_body;;
+    
+    // Add information on the edit time
+    document.getElementById(`post-timestamp-${postID}`).innerHTML = ` (Edited) ${formatDate(new Date())}`
+
+    // Unhide the edit button
+    document.getElementById(`edit-btn-${postID}`).style.display = 'block';
+}
